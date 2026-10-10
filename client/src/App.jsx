@@ -3,12 +3,8 @@ import { useAuth } from './context/AuthContext';
 import { dashboardApi } from './api/dashboardApi';
 import { voucherApi } from './api/voucherApi';
 import { LoginPage } from './pages/LoginPage';
-import { VouchersPage } from './pages/VouchersPage';
-import { Navbar } from './components/layout/Navbar';
-import { Sidebar } from './components/layout/Sidebar';
-import { EmployeeDashboard } from './components/dashboards/EmployeeDashboard';
-import { DirectorDashboard } from './components/dashboards/DirectorDashboard';
-import { AccountsDashboard } from './components/dashboards/AccountsDashboard';
+import { EmployeePortal } from './portals/EmployeePortal';
+import { AdminPortal } from './portals/AdminPortal';
 import { VoucherFormModal } from './components/vouchers/VoucherFormModal';
 import { VoucherDetailsModal } from './components/vouchers/VoucherDetailsModal';
 import { DirectorActionModal } from './components/vouchers/DirectorActionModal';
@@ -19,10 +15,7 @@ import confetti from 'canvas-confetti';
 export function App() {
   const { user, isAuthenticated, loading } = useAuth();
 
-  // Navigation state
-  const [activeTab, setActiveTab] = useState('dashboard');
-
-  // Dashboard data state
+  // Dashboard metrics state
   const [dashboardData, setDashboardData] = useState(null);
   const [dashboardLoading, setDashboardLoading] = useState(false);
 
@@ -49,7 +42,6 @@ export function App() {
     }, 4500);
   };
 
-  // Trigger celebration confetti
   const triggerConfetti = () => {
     try {
       confetti({
@@ -81,11 +73,10 @@ export function App() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchDashboardStats();
-      setActiveTab('dashboard');
     }
   }, [user, isAuthenticated]);
 
-  // Form Submission (Create or Edit)
+  // Form Submission (Create or Edit Voucher)
   const handleVoucherFormSubmit = async (formData) => {
     try {
       if (editingVoucher) {
@@ -104,7 +95,7 @@ export function App() {
     }
   };
 
-  // Director Approval action
+  // Director Approval Action
   const handleDirectorApprove = async (voucherId, signature) => {
     try {
       const res = await voucherApi.approveVoucher(voucherId, signature);
@@ -117,11 +108,11 @@ export function App() {
     }
   };
 
-  // Director Rejection action
+  // Director Rejection Action
   const handleDirectorReject = async (voucherId, rejectionReason) => {
     try {
       const res = await voucherApi.rejectVoucher(voucherId, rejectionReason);
-      showToast('info', res.message || 'Voucher rejected');
+      showToast('info', res.message || 'Voucher returned with feedback');
       fetchDashboardStats();
     } catch (err) {
       showToast('error', err.message || 'Rejection failed');
@@ -150,129 +141,29 @@ export function App() {
     return <LoginPage />;
   }
 
-  const pendingApprovalsCount = dashboardData?.stats?.pendingApprovalCount || 0;
-
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f8fafc' }}>
-      {/* Navigation Header */}
-      <Navbar
-        onOpenNewVoucher={user?.role === 'employee' ? () => { setEditingVoucher(null); setFormModalOpen(true); } : null}
-      />
-
-      {/* Main Body */}
-      <div style={{ display: 'flex', flex: 1, maxWidth: 1600, width: '100%', margin: '0 auto' }}>
-        {/* Sidebar */}
-        <Sidebar
-          activeTab={activeTab}
-          onSelectTab={(tabId) => {
-            if (tabId === 'create') {
-              setEditingVoucher(null);
-              setFormModalOpen(true);
-            } else {
-              setActiveTab(tabId);
-            }
-          }}
-          pendingCount={pendingApprovalsCount}
+    <>
+      {/* Explicit Portal Routing: User Side vs Admin Side */}
+      {user.role === 'employee' ? (
+        <EmployeePortal
+          dashboardData={dashboardData}
+          onOpenCreate={() => { setEditingVoucher(null); setFormModalOpen(true); }}
+          onViewDetails={(v) => { setSelectedVoucher(v); setDetailsModalOpen(true); }}
+          onPrintSlip={(v) => { setPrintingVoucher(v); setPrintSlipOpen(true); }}
+          onEditDraft={(v) => { setEditingVoucher(v); setFormModalOpen(true); }}
+          showToast={showToast}
         />
+      ) : (
+        <AdminPortal
+          dashboardData={dashboardData}
+          onReviewDirector={(v) => { setReviewingVoucher(v); setDirectorModalOpen(true); }}
+          onViewDetails={(v) => { setSelectedVoucher(v); setDetailsModalOpen(true); }}
+          onPrintSlip={(v) => { setPrintingVoucher(v); setPrintSlipOpen(true); }}
+          showToast={showToast}
+        />
+      )}
 
-        {/* Dynamic Main Workspace Content */}
-        <main style={{ flex: 1, padding: '28px 32px', minWidth: 0 }}>
-          {activeTab === 'dashboard' && (
-            <>
-              {user.role === 'employee' && (
-                <EmployeeDashboard
-                  stats={dashboardData?.stats}
-                  recentVouchers={dashboardData?.recentVouchers}
-                  onCreateVoucher={() => { setEditingVoucher(null); setFormModalOpen(true); }}
-                  onViewAll={() => setActiveTab('vouchers')}
-                  onViewDetails={(v) => { setSelectedVoucher(v); setDetailsModalOpen(true); }}
-                  onEditDraft={(v) => { setEditingVoucher(v); setFormModalOpen(true); }}
-                />
-              )}
-
-              {user.role === 'director' && (
-                <DirectorDashboard
-                  stats={dashboardData?.stats}
-                  pendingList={dashboardData?.pendingList}
-                  recentActivity={dashboardData?.recentActivity}
-                  onReviewVoucher={(v) => { setReviewingVoucher(v); setDirectorModalOpen(true); }}
-                  onViewDetails={(v) => { setSelectedVoucher(v); setDetailsModalOpen(true); }}
-                  onViewAllPending={() => setActiveTab('pending')}
-                  onViewAll={() => setActiveTab('all_vouchers')}
-                />
-              )}
-
-              {user.role === 'accounts' && (
-                <AccountsDashboard
-                  stats={dashboardData?.stats}
-                  recentApproved={dashboardData?.recentApprovedVouchers}
-                  onPrintSlip={(v) => { setPrintingVoucher(v); setPrintSlipOpen(true); }}
-                  onViewDetails={(v) => { setSelectedVoucher(v); setDetailsModalOpen(true); }}
-                  onViewAll={() => setActiveTab('all_vouchers')}
-                />
-              )}
-            </>
-          )}
-
-          {activeTab === 'vouchers' && (
-            <VouchersPage
-              initialStatus="All"
-              pageTitle="My Expense Vouchers"
-              pageSubtitle="All personal expense reimbursement claims filed by you"
-              onOpenCreate={() => { setEditingVoucher(null); setFormModalOpen(true); }}
-              onViewDetails={(v) => { setSelectedVoucher(v); setDetailsModalOpen(true); }}
-              onPrintSlip={(v) => { setPrintingVoucher(v); setPrintSlipOpen(true); }}
-              onEditDraft={(v) => { setEditingVoucher(v); setFormModalOpen(true); }}
-              onReviewDirector={(v) => { setReviewingVoucher(v); setDirectorModalOpen(true); }}
-              showToast={showToast}
-            />
-          )}
-
-          {activeTab === 'pending' && (
-            <VouchersPage
-              initialStatus="Pending Approval"
-              pageTitle="Pending Executive Approvals"
-              pageSubtitle="Expense vouchers submitted by employees awaiting Director sanction and signature"
-              onOpenCreate={null}
-              onViewDetails={(v) => { setSelectedVoucher(v); setDetailsModalOpen(true); }}
-              onPrintSlip={(v) => { setPrintingVoucher(v); setPrintSlipOpen(true); }}
-              onEditDraft={(v) => { setEditingVoucher(v); setFormModalOpen(true); }}
-              onReviewDirector={(v) => { setReviewingVoucher(v); setDirectorModalOpen(true); }}
-              showToast={showToast}
-            />
-          )}
-
-          {activeTab === 'all_vouchers' && (
-            <VouchersPage
-              initialStatus="All"
-              pageTitle="Organization Expense Vouchers"
-              pageSubtitle="Complete company-wide expense voucher repository and audit ledger"
-              onOpenCreate={null}
-              onViewDetails={(v) => { setSelectedVoucher(v); setDetailsModalOpen(true); }}
-              onPrintSlip={(v) => { setPrintingVoucher(v); setPrintSlipOpen(true); }}
-              onEditDraft={(v) => { setEditingVoucher(v); setFormModalOpen(true); }}
-              onReviewDirector={(v) => { setReviewingVoucher(v); setDirectorModalOpen(true); }}
-              showToast={showToast}
-            />
-          )}
-
-          {activeTab === 'reimbursements' && (
-            <VouchersPage
-              initialStatus="Approved"
-              pageTitle="Approved Reimbursements Register"
-              pageSubtitle="Vouchers approved with verified Director signatures, cleared for payment execution"
-              onOpenCreate={null}
-              onViewDetails={(v) => { setSelectedVoucher(v); setDetailsModalOpen(true); }}
-              onPrintSlip={(v) => { setPrintingVoucher(v); setPrintSlipOpen(true); }}
-              onEditDraft={null}
-              onReviewDirector={null}
-              showToast={showToast}
-            />
-          )}
-        </main>
-      </div>
-
-      {/* Modals */}
+      {/* Shared Modals */}
       <VoucherFormModal
         isOpen={formModalOpen}
         onClose={() => setFormModalOpen(false)}
@@ -303,6 +194,6 @@ export function App() {
 
       {/* Global Toast */}
       <Toast toast={toast} onClose={() => setToast(null)} />
-    </div>
+    </>
   );
 }
