@@ -1,5 +1,13 @@
-// Centralized Fetch Client with JWT injection and error serialization
-const API_BASE_URL = '/api';
+// Centralized Fetch Client with JWT injection and resilient fallback
+const getApiBaseUrl = () => {
+  if (import.meta.env && import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (typeof window !== 'undefined' && window.location.port === '3000') {
+    return '/api';
+  }
+  return 'http://localhost:5000/api';
+};
 
 export const apiClient = async (endpoint, options = {}) => {
   const token = localStorage.getItem('evms_token');
@@ -17,13 +25,28 @@ export const apiClient = async (endpoint, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const url = `${API_BASE_URL}${endpoint}`;
+  const primaryBase = getApiBaseUrl();
+  const url = `${primaryBase}${endpoint}`;
   
   try {
-    const response = await fetch(url, {
-      ...options,
-      headers
-    });
+    let response;
+    try {
+      response = await fetch(url, {
+        ...options,
+        headers
+      });
+    } catch (networkErr) {
+      // If relative proxy failed, attempt direct backend connection on port 5000
+      if (primaryBase === '/api') {
+        const fallbackUrl = `http://localhost:5000/api${endpoint}`;
+        response = await fetch(fallbackUrl, {
+          ...options,
+          headers
+        });
+      } else {
+        throw networkErr;
+      }
+    }
 
     const data = await response.json().catch(() => ({}));
 
