@@ -17,7 +17,6 @@ An enterprise web application developed for **Prachay Securities Private Limited
 5. [Database Schema](#5-database-schema)
 6. [API Reference](#6-api-reference)
 7. [Business Rules & Assumptions](#7-business-rules--assumptions)
-8. [Testing & Quality Assurance](#8-testing--quality-assurance)
 
 ---
 
