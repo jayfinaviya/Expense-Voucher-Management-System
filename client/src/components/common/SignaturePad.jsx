@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { PenTool, Upload, RotateCcw, Check, Sparkles } from 'lucide-react';
+import { PenTool, Upload, RotateCcw, Check, Sparkles, Loader2 } from 'lucide-react';
+import { voucherApi } from '../../api/voucherApi';
 
 export const SignaturePad = ({ value, onChange, label = 'Authorized Signature', required = false, defaultSignature = null }) => {
   const canvasRef = useRef(null);
@@ -7,9 +8,10 @@ export const SignaturePad = ({ value, onChange, label = 'Authorized Signature', 
   const [mode, setMode] = useState('draw'); // 'draw' or 'upload'
   const [hasDrawn, setHasDrawn] = useState(false);
   const [uploadPreview, setUploadPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    if (value && typeof value === 'string' && value.startsWith('/uploads/')) {
+    if (value && typeof value === 'string' && (value.startsWith('/uploads/') || value.startsWith('data:image/'))) {
       setMode('upload');
       setUploadPreview(value);
     }
@@ -73,8 +75,8 @@ export const SignaturePad = ({ value, onChange, label = 'Authorized Signature', 
     setUploadPreview(null);
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
+  const handleFileUpload = async (e) => {
+    const file = e.target.files && e.target.files[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
@@ -82,11 +84,25 @@ export const SignaturePad = ({ value, onChange, label = 'Authorized Signature', 
       return;
     }
 
+    setUploading(true);
+    try {
+      const res = await voucherApi.uploadSignature(file);
+      if (res && res.success && res.url) {
+        setUploadPreview(res.url);
+        onChange(res.url);
+        setUploading(false);
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend multipart upload fallback to base64 encoding:', err);
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       const result = event.target.result;
       setUploadPreview(result);
       onChange(result);
+      setUploading(false);
     };
     reader.readAsDataURL(file);
   };
@@ -217,6 +233,13 @@ export const SignaturePad = ({ value, onChange, label = 'Authorized Signature', 
                   Remove
                 </button>
               </div>
+            </div>
+          ) : uploading ? (
+            <div style={{ padding: '20px 0' }}>
+              <Loader2 size={28} color="#2563eb" style={{ margin: '0 auto 8px auto', display: 'block', animation: 'spin 1s linear infinite' }} />
+              <p style={{ fontSize: '0.875rem', color: '#1e40af', fontWeight: 600 }}>
+                Uploading signature file to server...
+              </p>
             </div>
           ) : (
             <div>

@@ -161,6 +161,10 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ success: false, message: err.message });
   }
 
+  if (err.message && err.message.includes('Invalid file type')) {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+
   const statusCode = err.status || 500;
   res.status(statusCode).json({
     success: false,

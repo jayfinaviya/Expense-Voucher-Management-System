@@ -1,8 +1,8 @@
 import React from 'react';
 import { StatusBadge } from '../common/StatusBadge';
-import { X, Printer, Calendar, User, Building, Tag, DollarSign, Clock, ShieldCheck, AlertCircle, FileText } from 'lucide-react';
+import { X, Printer, Calendar, User, Building, Tag, DollarSign, Clock, ShieldCheck, AlertCircle, FileText, Download, RotateCcw } from 'lucide-react';
 
-export const VoucherDetailsModal = ({ isOpen, voucher, onClose, onPrintSlip }) => {
+export const VoucherDetailsModal = ({ isOpen, voucher, onClose, onPrintSlip, onReviseDraft }) => {
   if (!isOpen || !voucher) return null;
 
   const formatCurrency = (amount) => {
@@ -26,6 +26,16 @@ export const VoucherDetailsModal = ({ isOpen, voucher, onClose, onPrintSlip }) =
     } catch {
       return iso;
     }
+  };
+
+  const handleDownloadJSON = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(voucher, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `${voucher.voucher_number}_record.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
   };
 
   return (
@@ -254,18 +264,46 @@ export const VoucherDetailsModal = ({ isOpen, voucher, onClose, onPrintSlip }) =
         </div>
 
         {/* Footer */}
-        <div className="modal-footer">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => onPrintSlip(voucher)}
-          >
-            <Printer size={15} />
-            Print Official Voucher Slip
-          </button>
-          <button type="button" className="btn btn-primary" onClick={onClose}>
-            Close
-          </button>
+        <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleDownloadJSON}
+              title="Download structured JSON record for accounting archive"
+            >
+              <Download size={15} />
+              Download Record (JSON)
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => onPrintSlip(voucher)}
+            >
+              <Printer size={15} />
+              Print Official Slip
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8 }}>
+            {voucher.status === 'Rejected' && onReviseDraft && (
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  onClose();
+                  onReviseDraft(voucher);
+                }}
+                style={{ background: '#2563eb' }}
+              >
+                <RotateCcw size={15} />
+                Revise as New Draft
+              </button>
+            )}
+            <button type="button" className="btn btn-secondary" onClick={onClose}>
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>

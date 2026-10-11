@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { StatusBadge } from '../common/StatusBadge';
-import { Eye, Printer, Edit2, Trash2, Send, CheckSquare, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Eye, Printer, Edit2, Trash2, Send, CheckSquare, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw } from 'lucide-react';
 
 export const VoucherTable = ({
   vouchers,
@@ -11,6 +11,7 @@ export const VoucherTable = ({
   onViewDetails,
   onPrintSlip,
   onEditDraft,
+  onReviseDraft,
   onDeleteDraft,
   onSubmitDraft,
   onReviewDirector
@@ -254,6 +255,20 @@ export const VoucherTable = ({
                           <Trash2 size={13} />
                         </button>
                       </>
+                    )}
+
+                    {/* Employee Action for Rejected Voucher: Revise as New Draft */}
+                    {isEmployeeOwner && v.status === 'Rejected' && onReviseDraft && (
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={() => onReviseDraft(v)}
+                        title="Revise Claim (Prefill into New Draft)"
+                        style={{ padding: '5px 9px', fontSize: '0.75rem', background: '#2563eb' }}
+                      >
+                        <RotateCcw size={12} />
+                        Revise
+                      </button>
                     )}
                   </div>
                 </td>

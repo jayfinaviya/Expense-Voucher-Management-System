@@ -1,5 +1,5 @@
 import React from 'react';
-import { Printer, X, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Printer, X, ShieldCheck, CheckCircle2, Download } from 'lucide-react';
 
 export const VoucherPrintSlip = ({ isOpen, voucher, onClose }) => {
   if (!isOpen || !voucher) return null;
@@ -37,6 +37,36 @@ export const VoucherPrintSlip = ({ isOpen, voucher, onClose }) => {
     window.print();
   };
 
+  const handleDownloadHTML = () => {
+    const slipEl = document.querySelector('.printable-slip-wrapper');
+    if (!slipEl) return;
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Expense_Voucher_${voucher.voucher_number}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 30px; color: #000; background: #fff; }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { padding: 8px 12px; border: 1px solid #cbd5e1; }
+    .mono-num { font-family: monospace; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  ${slipEl.innerHTML}
+</body>
+</html>`;
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Voucher_${voucher.voucher_number}.html`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="modal-backdrop">
       <div className="modal-dialog modal-xl" style={{ maxHeight: '95vh' }}>
@@ -51,6 +81,10 @@ export const VoucherPrintSlip = ({ isOpen, voucher, onClose }) => {
             </span>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={handleDownloadHTML} title="Download standalone HTML document">
+              <Download size={15} />
+              Download Slip
+            </button>
             <button type="button" className="btn btn-primary btn-sm" onClick={handlePrint}>
               <Printer size={15} />
               Print / Save as PDF
@@ -314,6 +348,25 @@ export const VoucherPrintSlip = ({ isOpen, voucher, onClose }) => {
               </div>
             </div>
           </div>
+
+          {/* Rejection Remarks (Section 5 Voucher Details) */}
+          {voucher.status === 'Rejected' && voucher.rejection_reason && (
+            <div style={{
+              border: '1px solid #ef4444',
+              background: '#fef2f2',
+              color: '#991b1b',
+              padding: 12,
+              borderRadius: 6,
+              marginBottom: 20
+            }}>
+              <div style={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', color: '#b91c1c' }}>
+                Executive Rejection Reason & Feedback:
+              </div>
+              <div style={{ fontSize: '0.8125rem', marginTop: 4, color: '#7f1d1d' }}>
+                {voucher.rejection_reason}
+              </div>
+            </div>
+          )}
 
           {/* Accounts Reimbursement Clearance Box */}
           <div style={{

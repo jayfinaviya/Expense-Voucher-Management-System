@@ -9,7 +9,7 @@
     "server": "node server/index.js",
     "client": "npm --prefix client run dev",
     "build": "npm --prefix client run build",
-    "test": "echo \"Ready for testing\" && exit 0"
+    "test": "node server/tests/comprehensive_test_suite.js && node server/tests/pdf_checklist.test.js && node server/tests/rbac_security.test.js"
   },
   "keywords": [],
   "author": "",

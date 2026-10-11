@@ -29,6 +29,8 @@ export const VoucherFilterBar = ({ filters, onFilterChange, onResetFilters }) =>
   const hasActiveAdvancedFilters = !!(
     (filters.department && filters.department !== 'All') ||
     (filters.category && filters.category !== 'All') ||
+    filters.voucherNumber ||
+    filters.employeeName ||
     filters.startDate ||
     filters.endDate ||
     filters.minAmount ||
@@ -150,6 +152,36 @@ export const VoucherFilterBar = ({ filters, onFilterChange, onResetFilters }) =>
           gap: 14,
           animation: 'fadeIn 150ms ease-out'
         }}>
+          {/* Voucher Number Filter (Section 7 Search & Filter) */}
+          <div>
+            <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: 4 }}>
+              Voucher Number
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. EV-2026-0001"
+              className="form-input"
+              value={filters.voucherNumber || ''}
+              onChange={(e) => onFilterChange('voucherNumber', e.target.value)}
+              style={{ fontSize: '0.8125rem', padding: '6px 10px' }}
+            />
+          </div>
+
+          {/* Employee Name Filter (Section 7 Search & Filter) */}
+          <div>
+            <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: 4 }}>
+              Employee Name
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Alex / Priya"
+              className="form-input"
+              value={filters.employeeName || ''}
+              onChange={(e) => onFilterChange('employeeName', e.target.value)}
+              style={{ fontSize: '0.8125rem', padding: '6px 10px' }}
+            />
+          </div>
+
           {/* Department Filter */}
           <div>
             <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: 4 }}>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { EmployeeDashboard } from '../components/dashboards/EmployeeDashboard';
 import { VouchersPage } from '../pages/VouchersPage';
-import { LayoutDashboard, FileText, PlusCircle, AlertCircle, Edit3, UserCheck, LogOut, ArrowRight, Shield } from 'lucide-react';
+import { LayoutDashboard, FileText, PlusCircle, AlertCircle, Edit3, UserCheck, LogOut, ArrowRight, Lock } from 'lucide-react';
 
 export const EmployeePortal = ({
   dashboardData,
@@ -10,17 +10,15 @@ export const EmployeePortal = ({
   onViewDetails,
   onPrintSlip,
   onEditDraft,
+  onReviseDraft,
   showToast
 }) => {
-  const { user, logout, switchRole, demoUsers } = useAuth();
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'claims', 'drafts', 'revisions'
-
-  const employeeDemoUsers = demoUsers.filter(u => u.role === 'employee');
-  const adminDemoUsers = demoUsers.filter(u => u.role !== 'employee');
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f8fafc' }}>
-      {/* Top Portal Identification & Evaluator Switcher Bar */}
+      {/* Top Portal Identification Banner (Strict Employee Isolation) */}
       <div style={{
         background: '#0f172a',
         color: '#f8fafc',
@@ -41,12 +39,13 @@ export const EmployeePortal = ({
             borderRadius: 4,
             fontWeight: 700,
             letterSpacing: '0.05em',
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
+            fontSize: '0.6875rem'
           }}>
-            User Side
+            Employee Portal
           </span>
           <span style={{ fontWeight: 600, color: '#e2e8f0' }}>
-            EMPLOYEE EXPENSE PORTAL
+            PRACHAY SECURITIES
           </span>
           <span style={{ color: '#64748b' }}>|</span>
           <span style={{ color: '#94a3b8' }}>
@@ -54,48 +53,22 @@ export const EmployeePortal = ({
           </span>
         </div>
 
-        {/* Portal Switcher for Evaluators */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ color: '#94a3b8', fontSize: '0.6875rem' }}>Switch Persona / Portal:</span>
-          {employeeDemoUsers.map(demo => (
-            <button
-              key={demo.id}
-              onClick={() => switchRole(demo.email)}
-              style={{
-                background: user?.email === demo.email ? '#2563eb' : '#1e293b',
-                color: user?.email === demo.email ? '#ffffff' : '#cbd5e1',
-                border: user?.email === demo.email ? '1px solid #60a5fa' : '1px solid #334155',
-                padding: '3px 8px',
-                borderRadius: 4,
-                cursor: 'pointer',
-                fontSize: '0.6875rem',
-                fontWeight: user?.email === demo.email ? 700 : 400
-              }}
-            >
-              Employee: {demo.name.split(' ')[0]}
-            </button>
-          ))}
-          <span style={{ color: '#475569' }}>➔</span>
-          <button
-            onClick={() => switchRole('director@prachay.com')}
-            style={{
-              background: '#4c1d95',
-              color: '#ede9fe',
-              border: '1px solid #7c3aed',
-              padding: '3px 10px',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: '0.6875rem',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4
-            }}
-            title="Switch to Management Portal"
-          >
-            <Shield size={11} />
-            Switch to Management Portal (Admin Side)
-          </button>
+        {/* Security & Authenticated User Status */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            color: '#94a3b8',
+            fontSize: '0.6875rem'
+          }}>
+            <Lock size={12} style={{ color: '#3b82f6' }} />
+            Role: <strong style={{ color: '#60a5fa', textTransform: 'uppercase' }}>{user?.role || 'EMPLOYEE'}</strong>
+          </span>
+          <span style={{ color: '#475569' }}>•</span>
+          <span style={{ color: '#cbd5e1', fontSize: '0.6875rem' }}>
+            Account ID: <strong style={{ color: '#f8fafc' }}>{user?.employee_id || `EMP-${user?.id}`}</strong>
+          </span>
         </div>
       </div>
 
@@ -277,6 +250,8 @@ export const EmployeePortal = ({
             onViewAll={() => setActiveTab('claims')}
             onViewDetails={onViewDetails}
             onEditDraft={onEditDraft}
+            onReviseDraft={onReviseDraft}
+            onViewRevisions={() => setActiveTab('revisions')}
           />
         )}
 
@@ -289,6 +264,7 @@ export const EmployeePortal = ({
             onViewDetails={onViewDetails}
             onPrintSlip={onPrintSlip}
             onEditDraft={onEditDraft}
+            onReviseDraft={onReviseDraft}
             onReviewDirector={null}
             showToast={showToast}
           />
@@ -303,6 +279,7 @@ export const EmployeePortal = ({
             onViewDetails={onViewDetails}
             onPrintSlip={onPrintSlip}
             onEditDraft={onEditDraft}
+            onReviseDraft={onReviseDraft}
             onReviewDirector={null}
             showToast={showToast}
           />
@@ -317,6 +294,7 @@ export const EmployeePortal = ({
             onViewDetails={onViewDetails}
             onPrintSlip={onPrintSlip}
             onEditDraft={onEditDraft}
+            onReviseDraft={onReviseDraft}
             onReviewDirector={null}
             showToast={showToast}
           />

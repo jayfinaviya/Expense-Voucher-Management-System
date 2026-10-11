@@ -1,8 +1,53 @@
+# ==============================================================================
+# Expense Voucher Management System - Git Ignore Configuration
+# ==============================================================================
+
+# Node Dependencies
 node_modules/
+client/node_modules/
+
+# Production Build Artifacts
 dist/
+client/dist/
+
+# Environment Variables & Secrets (NEVER COMMIT SENSITIVE SECRETS)
 .env
-*.log
-.DS_Store
+.env.local
+.env.*.local
+.env.development
+.env.production
+!.env.example
+
+# Runtime Databases & Logs
 server/data/*.db
 server/data/*.db-journal
-client/dist/
+server/data/*.db-wal
+server/data/*.db-shm
+!server/data/.gitkeep
+
+# User Uploaded Signatures & Private Files
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Log Files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+
+# IDE & Editor Configurations
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

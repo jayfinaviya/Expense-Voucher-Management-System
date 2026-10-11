@@ -9,7 +9,9 @@ export const EmployeeDashboard = ({
   onCreateVoucher,
   onViewAll,
   onViewDetails,
-  onEditDraft
+  onEditDraft,
+  onReviseDraft,
+  onViewRevisions
 }) => {
   const { user } = useAuth();
 
@@ -23,6 +25,45 @@ export const EmployeeDashboard = ({
 
   return (
     <div>
+      {/* Returned / Rejected Claims Attention Banner */}
+      {stats?.rejectedVouchers > 0 && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: 8,
+          padding: '14px 20px',
+          marginBottom: 20,
+          flexWrap: 'wrap',
+          gap: 12,
+          boxShadow: 'var(--shadow-xs)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ background: '#fee2e2', padding: 8, borderRadius: '50%', color: '#dc2626' }}>
+              <XCircle size={20} />
+            </span>
+            <div>
+              <div style={{ fontWeight: 700, color: '#991b1b', fontSize: '0.9375rem' }}>
+                Action Required: {stats.rejectedVouchers} Claim(s) Returned by Director
+              </div>
+              <div style={{ fontSize: '0.8125rem', color: '#7f1d1d' }}>
+                The Director has provided revision remarks. Review feedback and resubmit as revised claims.
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-sm btn-danger"
+            onClick={onViewRevisions}
+          >
+            Review Returned Claims
+            <ArrowRight size={14} />
+          </button>
+        </div>
+      )}
+
       {/* Welcome Banner */}
       <div className="card" style={{
         padding: '24px 28px',
@@ -238,14 +279,37 @@ export const EmployeeDashboard = ({
                       <StatusBadge status={v.status} />
                     </td>
                     <td style={{ textAlign: 'right' }}>
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => onViewDetails(v)}
-                      >
-                        <Eye size={13} />
-                        View
-                      </button>
+                      <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => onViewDetails(v)}
+                        >
+                          <Eye size={13} />
+                          View
+                        </button>
+                        {v.status === 'Draft' && (
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => onEditDraft(v)}
+                            title="Edit Draft"
+                          >
+                            <Edit2 size={13} />
+                          </button>
+                        )}
+                        {v.status === 'Rejected' && onReviseDraft && (
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm"
+                            onClick={() => onReviseDraft(v)}
+                            title="Revise Claim"
+                            style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                          >
+                            Revise
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

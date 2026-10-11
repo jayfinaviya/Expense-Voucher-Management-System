@@ -12,7 +12,7 @@ export const AdminPortal = ({
   onPrintSlip,
   showToast
 }) => {
-  const { user, logout, switchRole, demoUsers } = useAuth();
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'pending', 'all_vouchers', 'reimbursements'
 
   const isDirector = user?.role === 'director';
@@ -56,62 +56,22 @@ export const AdminPortal = ({
           </span>
         </div>
 
-        {/* Switcher for Evaluators */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ color: '#94a3b8', fontSize: '0.6875rem' }}>Switch Admin Persona:</span>
-          <button
-            onClick={() => switchRole('director@prachay.com')}
-            style={{
-              background: isDirector ? '#7c3aed' : '#0f172a',
-              color: isDirector ? '#ffffff' : '#cbd5e1',
-              border: isDirector ? '1px solid #a78bfa' : '1px solid #334155',
-              padding: '3px 8px',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: '0.6875rem',
-              fontWeight: isDirector ? 700 : 400
-            }}
-          >
-            Director (Sarah)
-          </button>
-
-          <button
-            onClick={() => switchRole('accounts@prachay.com')}
-            style={{
-              background: isAccounts ? '#059669' : '#0f172a',
-              color: isAccounts ? '#ffffff' : '#cbd5e1',
-              border: isAccounts ? '1px solid #34d399' : '1px solid #334155',
-              padding: '3px 8px',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: '0.6875rem',
-              fontWeight: isAccounts ? 700 : 400
-            }}
-          >
-            Accounts (Rohit)
-          </button>
-
-          <span style={{ color: '#475569' }}>➔</span>
-          <button
-            onClick={() => switchRole('employee@prachay.com')}
-            style={{
-              background: '#1e293b',
-              color: '#93c5fd',
-              border: '1px solid #3b82f6',
-              padding: '3px 10px',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: '0.6875rem',
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4
-            }}
-            title="Switch back to Employee Portal"
-          >
-            <User size={11} />
-            Switch to Employee Portal (User Side)
-          </button>
+        {/* Security & Role Display */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            color: '#c4b5fd',
+            fontSize: '0.6875rem'
+          }}>
+            <ShieldCheck size={12} style={{ color: '#a78bfa' }} />
+            Role: <strong style={{ color: '#ffffff', textTransform: 'uppercase' }}>{user?.role}</strong>
+          </span>
+          <span style={{ color: '#475569' }}>•</span>
+          <span style={{ color: '#cbd5e1', fontSize: '0.6875rem' }}>
+            ID: <strong style={{ color: '#ffffff' }}>{user?.employee_id || user?.id}</strong>
+          </span>
         </div>
       </div>
 

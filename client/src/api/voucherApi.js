@@ -55,5 +55,14 @@ export const voucherApi = {
       method: 'POST',
       body: JSON.stringify({ rejection_reason })
     });
+  },
+
+  uploadSignature: (file) => {
+    const formData = new FormData();
+    formData.append('signatureFile', file);
+    return apiClient('/upload/signature', {
+      method: 'POST',
+      body: formData
+    });
   }
 };

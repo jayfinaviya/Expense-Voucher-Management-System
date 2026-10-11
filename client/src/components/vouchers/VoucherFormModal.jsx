@@ -30,7 +30,7 @@ export const VoucherFormModal = ({ isOpen, onClose, onSubmit, editingVoucher = n
         expense_description: editingVoucher.expense_description || '',
         amount: editingVoucher.amount || '',
         employee_id: editingVoucher.employee_id || user?.employee_id || '',
-        signature: editingVoucher.employee_signature || user?.default_signature || ''
+        signature: editingVoucher.signature || editingVoucher.employee_signature || user?.default_signature || ''
       });
     } else {
       setFormData({
@@ -122,10 +122,16 @@ export const VoucherFormModal = ({ isOpen, onClose, onSubmit, editingVoucher = n
           <div>
             <h3 style={{ fontSize: '1.25rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
               <FileText size={20} color="#1d4ed8" />
-              {editingVoucher ? `Edit Draft Voucher: ${editingVoucher.voucher_number}` : 'Create New Expense Voucher'}
+              {editingVoucher?.isRevision
+                ? 'Create Revised Expense Claim (New Draft)'
+                : editingVoucher?.id
+                ? `Edit Draft Voucher: ${editingVoucher.voucher_number}`
+                : 'Create New Expense Voucher'}
             </h3>
             <p style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: 2 }}>
-              Fill in all mandatory expense details. Save as draft or attach signature to submit immediately.
+              {editingVoucher?.isRevision
+                ? 'Adjust the necessary fields or remarks based on Director feedback, then save as draft or re-submit.'
+                : 'Fill in all mandatory expense details. Save as draft or attach signature to submit immediately.'}
             </p>
           </div>
           <button

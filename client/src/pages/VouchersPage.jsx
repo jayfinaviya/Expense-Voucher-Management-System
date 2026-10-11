@@ -13,6 +13,7 @@ export const VouchersPage = ({
   onViewDetails,
   onPrintSlip,
   onEditDraft,
+  onReviseDraft,
   onReviewDirector,
   showToast
 }) => {
@@ -23,6 +24,8 @@ export const VouchersPage = ({
   // Filters state
   const [filters, setFilters] = useState({
     search: '',
+    voucherNumber: '',
+    employeeName: '',
     status: initialStatus,
     department: 'All',
     category: 'All',
@@ -77,6 +80,8 @@ export const VouchersPage = ({
   const handleResetFilters = () => {
     setFilters({
       search: '',
+      voucherNumber: '',
+      employeeName: '',
       status: 'All',
       department: 'All',
       category: 'All',
@@ -237,6 +242,7 @@ export const VouchersPage = ({
             onViewDetails={onViewDetails}
             onPrintSlip={onPrintSlip}
             onEditDraft={onEditDraft}
+            onReviseDraft={onReviseDraft}
             onDeleteDraft={handleDeleteDraft}
             onSubmitDraft={handleSubmitDraft}
             onReviewDirector={onReviewDirector}

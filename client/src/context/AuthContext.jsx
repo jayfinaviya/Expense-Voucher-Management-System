@@ -67,22 +67,6 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  // Instant role switch for evaluator convenience
-  const switchRole = async (targetEmail) => {
-    try {
-      const res = await authApi.login(targetEmail, 'password123');
-      if (res.success && res.token) {
-        localStorage.setItem('evms_token', res.token);
-        setToken(res.token);
-        setUser(res.user);
-        return res.user;
-      }
-    } catch (err) {
-      console.error('Role switch failed:', err);
-      throw err;
-    }
-  };
-
   return (
     <AuthContext.Provider
       value={{
@@ -92,7 +76,6 @@ export const AuthProvider = ({ children }) => {
         demoUsers,
         login,
         logout,
-        switchRole,
         isAuthenticated: !!user
       }}
     >

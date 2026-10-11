@@ -31,6 +31,8 @@ const getVouchers = async (req, res, next) => {
   try {
     const {
       search,
+      voucherNumber,
+      employeeName,
       department,
       category,
       status,
@@ -53,6 +55,22 @@ const getVouchers = async (req, res, next) => {
     if (req.user.role === 'employee') {
       conditions.push('created_by_user_id = ?');
       params.push(req.user.id);
+    } else if (req.user.role === 'director' || req.user.role === 'accounts') {
+      // Authorized for organization-wide visibility
+    } else {
+      return res.status(403).json({ success: false, message: 'Forbidden: Unauthorized role.' });
+    }
+
+    // Explicit filter by Voucher Number (Section 7 Search & Filter)
+    if (voucherNumber && voucherNumber.trim() !== '') {
+      conditions.push('voucher_number LIKE ?');
+      params.push(`%${voucherNumber.trim()}%`);
+    }
+
+    // Explicit filter by Employee Name (Section 7 Search & Filter)
+    if (employeeName && employeeName.trim() !== '') {
+      conditions.push('employee_name LIKE ?');
+      params.push(`%${employeeName.trim()}%`);
     }
 
     // Keyword Search (voucher_number, employee_name, expense_title, expense_description)
@@ -108,7 +126,7 @@ const getVouchers = async (req, res, next) => {
     const totalRecords = countResult ? countResult.total : 0;
 
     // Sorting whitelist to prevent SQL injection
-    const allowedSortFields = ['created_at', 'expense_date', 'voucher_date', 'amount', 'voucher_number', 'status', 'employee_name'];
+    const allowedSortFields = ['created_at', 'expense_date', 'voucher_date', 'amount', 'voucher_number', 'status', 'employee_name', 'department'];
     const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
     const validSortOrder = String(sortOrder).toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
@@ -151,9 +169,13 @@ const getVoucherById = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Voucher not found.' });
     }
 
-    // Check Employee access authorization
-    if (req.user.role === 'employee' && voucher.created_by_user_id !== req.user.id) {
-      return res.status(403).json({ success: false, message: 'Forbidden: You can only view your own expense vouchers.' });
+    // Check access authorization
+    if (req.user.role === 'employee') {
+      if (voucher.created_by_user_id !== req.user.id) {
+        return res.status(403).json({ success: false, message: 'Forbidden: You can only view your own expense vouchers.' });
+      }
+    } else if (req.user.role !== 'director' && req.user.role !== 'accounts') {
+      return res.status(403).json({ success: false, message: 'Forbidden: Unauthorized role.' });
     }
 
     return res.json({ success: true, voucher });
@@ -181,7 +203,6 @@ const createVoucher = async (req, res, next) => {
       expense_category,
       expense_description = '',
       amount,
-      employee_id,
       signature, // Base64 data URI or path
       action = 'draft' // 'draft' or 'submit'
     } = req.body;
@@ -190,7 +211,11 @@ const createVoucher = async (req, res, next) => {
     const errors = [];
     if (!department || !department.trim()) errors.push('Department is mandatory.');
     if (!expense_title || !expense_title.trim()) errors.push('Expense Title is mandatory.');
-    if (!expense_date) errors.push('Expense Date is mandatory.');
+    if (!expense_date || (typeof expense_date === 'string' && !expense_date.trim())) {
+      errors.push('Expense Date is mandatory.');
+    } else if (isNaN(new Date(expense_date).getTime())) {
+      errors.push('Expense Date must be a valid date.');
+    }
     if (amount === undefined || amount === null || isNaN(parseFloat(amount))) {
       errors.push('Amount is mandatory.');
     } else if (parseFloat(amount) <= 0) {
@@ -205,6 +230,10 @@ const createVoucher = async (req, res, next) => {
     if (errors.length > 0) {
       return res.status(400).json({ success: false, message: errors.join(' '), errors });
     }
+
+    // Derive employee information strictly from authenticated user session
+    const verifiedEmployeeId = req.user.employee_id || `EMP-${String(req.user.id).padStart(3, '0')}`;
+    const verifiedEmployeeName = req.user.name;
 
     const voucherNumber = await generateNextVoucherNumber();
     const now = new Date();
@@ -231,8 +260,8 @@ const createVoucher = async (req, res, next) => {
         parseFloat(amount),
         status,
         req.user.id,
-        req.user.name,
-        employee_id || req.user.employee_id || '',
+        verifiedEmployeeName,
+        verifiedEmployeeId,
         signature || null,
         signatureDate,
         isoTimestamp,
@@ -293,7 +322,11 @@ const updateVoucher = async (req, res, next) => {
     const errors = [];
     if (!department || !department.trim()) errors.push('Department is mandatory.');
     if (!expense_title || !expense_title.trim()) errors.push('Expense Title is mandatory.');
-    if (!expense_date) errors.push('Expense Date is mandatory.');
+    if (!expense_date || (typeof expense_date === 'string' && !expense_date.trim())) {
+      errors.push('Expense Date is mandatory.');
+    } else if (isNaN(new Date(expense_date).getTime())) {
+      errors.push('Expense Date must be a valid date.');
+    }
     if (amount === undefined || amount === null || isNaN(parseFloat(amount))) {
       errors.push('Amount is mandatory.');
     } else if (parseFloat(amount) <= 0) {
@@ -335,7 +368,7 @@ const updateVoucher = async (req, res, next) => {
         expense_category || voucher.expense_category,
         expense_description !== undefined ? expense_description.trim() : voucher.expense_description,
         parseFloat(amount),
-        employee_id || voucher.employee_id,
+        voucher.employee_id,
         finalSignature,
         signatureDate,
         newStatus,
@@ -416,9 +449,12 @@ const submitVoucher = async (req, res, next) => {
     }
 
     const { signature } = req.body;
-    const finalSignature = signature || voucher.employee_signature;
+    let finalSignature = signature;
+    if (finalSignature === undefined || finalSignature === null) {
+      finalSignature = voucher.employee_signature;
+    }
 
-    if (!finalSignature) {
+    if (!finalSignature || (typeof finalSignature === 'string' && !finalSignature.trim())) {
       return res.status(400).json({
         success: false,
         message: 'Employee Signature is mandatory before submission for approval.'
@@ -471,10 +507,13 @@ const approveVoucher = async (req, res, next) => {
     }
 
     const { signature } = req.body;
-    const finalSignature = signature || req.user.default_signature;
+    let finalSignature = signature;
+    if (finalSignature === undefined || finalSignature === null) {
+      finalSignature = req.user.default_signature;
+    }
 
     // Validation rule: Director Signature is mandatory before approval
-    if (!finalSignature) {
+    if (!finalSignature || (typeof finalSignature === 'string' && !finalSignature.trim())) {
       return res.status(400).json({
         success: false,
         message: 'Director Signature is mandatory before approval. Please sign or upload signature.'
