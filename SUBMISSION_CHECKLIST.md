@@ -15,7 +15,7 @@ This checklist performs an exhaustive, line-by-line verification of the **Expens
 | Submission Requirement Area | Assignment Requirement | EVMS Implementation Status | Verification Evidence |
 | :--- | :--- | :---: | :--- |
 | **1. GitHub Repository** | Complete codebase, config files, clean `.gitignore`, sensitive data excluded, no push without permission. | ✅ VERIFIED | `.gitignore` active, `.gitkeep` added, zero credentials committed, `git status` clean. |
-| **2. Professional README.md** | Comprehensive documentation covering Sections A, B, C, D, and E with real APIs and setup guides. | ✅ VERIFIED | Overhauled `README.md` covering all 5 core sections + 2 extra QA & screenshot sections. |
+| **2. Professional README.md** | Comprehensive documentation covering Sections A, B, C, D, and E with real APIs and setup guides. | ✅ VERIFIED | Streamlined, professional README.md covering all 5 core sections + QA reference. |
 | **3. Database Schema & Migrations** | Clean DDL schemas, constraints, relationships, indexes, defaults, and initialization scripts. | ✅ VERIFIED | `database/schema.sql`, `database/schema_postgres.sql`, and `database/migrations/001_initial_schema.sql` present. |
 | **4. Environment Variables (`.env.example`)** | Placeholders only, copy instructions, PostgreSQL & SQLite configurations included. | ✅ VERIFIED | `.env.example` verified with zero exposed secrets and crystal-clear setup instructions. |
 | **5. Screenshots & Demo Checklist** | 12 specific application views verified with genuine captures or manual recording walkthrough. | ✅ VERIFIED | 16 genuine browser screenshot artifacts + 2 WebP demo videos + full manual script. |
