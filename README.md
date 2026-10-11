@@ -358,24 +358,6 @@ Content-Type: application/json
 6. **Mandatory Rejection Remarks**:
    - Rejecting a voucher requires non-empty written feedback.
 
----
-
-## 8. Testing & Quality Assurance
-
-The application includes an automated test suite verifying functional requirements, business rules, RBAC boundaries, and data isolation.
-
-```bash
-# Run complete test suite (105 tests)
-npm test
-
-# Build client production bundle
-npm --prefix client run build
-```
-
-- **Test Suite Pass Rate**: **105 / 105 Passed (100%)**
-- Detailed test cases: [TEST_CASES.md](TEST_CASES.md)
-- Execution logs: [TEST_EXECUTION_REPORT.md](TEST_EXECUTION_REPORT.md)
-- Submission audit checklist: [SUBMISSION_CHECKLIST.md](SUBMISSION_CHECKLIST.md)
 
 ---
 
